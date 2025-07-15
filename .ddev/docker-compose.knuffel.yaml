@@ -1,0 +1,25 @@
+services:
+  knuffel:
+    container_name: ddev-${DDEV_SITENAME}-knuffel
+    build:
+      context: ${DDEV_APPROOT}
+      dockerfile: .ddev/Dockerfile.knuffel
+    restart: "unless-stopped"
+    expose:
+      - "5000"
+      - "22"
+    ports:
+      - "2222:22"  # Add this to map SSH port to host
+    environment:
+      - SECRET_KEY=${KNUFFEL_SECRET_KEY:-some_default_secret_key}
+      - DATABASE_URL=mariadb+pymysql://db:db@db:3306/db
+      - FLASK_APP=knuffel.py
+      - FLASK_DEBUG=False
+      - FLASK_RUN_HOST=0.0.0.0
+      - FLASK_RUN_PORT=5000
+    labels:
+      com.ddev.site-name: ${DDEV_SITENAME}
+      com.ddev.approot: $DDEV_APPROOT
+      # Use DDEV's HTTP_EXPOSE format for proper routing
+      http_expose: "8000:5000"
+      https_expose: "8443:5000"

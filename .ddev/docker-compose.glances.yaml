@@ -1,0 +1,14 @@
+services:
+  glances:
+    image: nicolargo/glances:latest
+    container_name: ddev-${DDEV_SITENAME}-glances
+    ports:
+      - "61208:61208"  # Web UI
+    restart: always
+    environment:
+      - "GLANCES_OPT=-w"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Uncomment to show host OS info in Glances UI:
+      # - /etc/os-release:/etc/os-release:ro
+    pid: host

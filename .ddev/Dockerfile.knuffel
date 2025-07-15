@@ -1,0 +1,67 @@
+FROM therandomweirdo/knuffel:latest
+
+# Install SSH server and essential utilities
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends openssh-server sudo procps net-tools iproute2 && \
+    mkdir -p /var/run/sshd && \
+    rm -rf /var/lib/apt/lists/*
+
+# Ensure www-data user has a proper shell for SSH
+RUN usermod -s /bin/bash www-data
+
+# Set home directory to /app for www-data user - ONE TIME ONLY
+RUN usermod -d /app www-data
+
+# Allow ddev user to run sshd without password
+RUN echo "ddev ALL=(ALL) NOPASSWD: /usr/sbin/sshd, /usr/bin/ssh-keygen" >> /etc/sudoers.d/ddev && \
+    chmod 0440 /etc/sudoers.d/ddev
+
+# Set www-data password for Wetty
+RUN echo 'www-data:Hamburg1' | chpasswd
+
+# Configure SSH
+RUN sed -i 's/^#Port 22/Port 22/' /etc/ssh/sshd_config && \
+    sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/^ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config && \
+    sed -i 's/^UsePAM.*/UsePAM no/' /etc/ssh/sshd_config && \
+    sed -i 's/^PrintMotd.*/PrintMotd no/' /etc/ssh/sshd_config && \
+    sed -i 's/^PrintLastLog.*/PrintLastLog no/' /etc/ssh/sshd_config   
+
+# Suppress all login banners and MOTD
+RUN sed -i '/pam_motd.so/d' /etc/pam.d/sshd && \
+    echo "" > /etc/motd && \
+    rm -rf /etc/update-motd.d/*
+
+# Create a restricted shell script for www-data
+RUN echo '#!/bin/bash\nif [ -f /main.py ]; then\n  cd /\n  exec python main.py\nelif [ -f /app/main.py ]; then\n  cd /app\n  exec python main.py\nelse\n  echo \"main.py not found\"; exit 1\nfi' > /usr/local/bin/knuffel-shell && \
+    chmod +x /usr/local/bin/knuffel-shell
+
+# Set www-data's shell to the restricted shell
+RUN usermod -s /usr/local/bin/knuffel-shell www-data
+
+# Remove shell startup files to prevent escape
+RUN rm -f /app/.bash_profile /app/.bashrc /app/.profile
+
+# Ensure /app and the database file are writable by www-data
+RUN mkdir -p /app && \
+    chown -R www-data:www-data /app && \
+    chmod -R 775 /app
+# If the database file already exists, fix its ownership
+RUN if [ -f /app/app.db ]; then chown www-data:www-data /app/app.db && chmod 664 /app/app.db; fi
+
+# Copy requirements.txt into the image
+COPY local_kniffel/requirements.txt /app/requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r /app/requirements.txt
+
+# (Optional) Copy your app code if needed
+COPY local_kniffel /app
+
+EXPOSE 22 5000
+
+COPY .ddev/knuffel-entrypoint.sh /knuffel-entrypoint.sh
+RUN chmod +x /knuffel-entrypoint.sh
+
+ENTRYPOINT ["/knuffel-entrypoint.sh"]

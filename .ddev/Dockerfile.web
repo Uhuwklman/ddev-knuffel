@@ -1,0 +1,76 @@
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
+
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv openssh-server && \
+    mkdir -p /var/run/sshd
+
+# Create user and group with specific IDs
+RUN groupadd -g 1000 ddev && \
+    useradd -u 1000 -g ddev -m -s /bin/bash ddev
+
+# Allow ddev user to run sshd without password
+RUN echo "ddev ALL=(ALL) NOPASSWD: /usr/sbin/sshd, /usr/bin/ssh-keygen" >> /etc/sudoers.d/ddev && \
+    chmod 0440 /etc/sudoers.d/ddev
+
+# Ensure www-data user has a proper shell for SSH
+RUN usermod -s /bin/bash www-data
+
+# Add SSH setup for wetty
+RUN echo 'www-data:Hamburg1' | chpasswd
+RUN sed -i 's/^#Port 22/Port 22/' /etc/ssh/sshd_config && \
+    sed -i 's/^#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/^#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# Fix permissions for supervisord log
+RUN touch /var/log/supervisord.log && \
+    chmod 666 /var/log/supervisord.log && \
+    chown ddev:ddev /var/log/supervisord.log
+
+EXPOSE 22
+
+# Create and activate virtual environment
+RUN python3 -m venv /var/www/venv
+ENV PATH="/var/www/venv/bin:$PATH"
+
+# Copy local_kniffel directory first
+COPY local_kniffel /var/www/html/local_kniffel/
+
+# Copy public directory
+COPY public /var/www/html/public/
+RUN chown -R www-data:www-data /var/www/html/public/
+
+# Copy entrypoint and set permissions BEFORE switching user
+COPY .ddev/web-entrypoint.sh /web-entrypoint.sh
+RUN chmod +x /web-entrypoint.sh
+
+# Set proper ownership and permissions
+RUN chown -R ddev:ddev /var/www && \
+    chmod -R 755 /var/www/html/local_kniffel
+
+WORKDIR /var/www/html/local_kniffel
+
+
+# Install requirements in virtual environment
+RUN . /var/www/venv/bin/activate && pip install -r requirements.txt
+
+
+# Create .env for the Kniffel app with DDEV MariaDB defaults
+RUN echo "SECRET_KEY=$(python3 -c 'import uuid; print(uuid.uuid4().hex)')" > /var/www/html/local_kniffel/.env && \
+    echo "DATABASE_URL=mysql+pymysql://db:db@db:3306/db" >> /var/www/html/local_kniffel/.env && \
+    echo "FLASK_APP=knuffel.py" >> /var/www/html/local_kniffel/.env && \
+    echo "FLASK_DEBUG=False" >> /var/www/html/local_kniffel/.env && \
+    echo "FLASK_RUN_HOST=0.0.0.0" >> /var/www/html/local_kniffel/.env && \
+    echo "FLASK_RUN_PORT=5000" >> /var/www/html/local_kniffel/.env && \
+    chown www-data:www-data /var/www/html/local_kniffel/.env
+
+RUN echo '#!/bin/bash\ncd /var/www/html/local_kniffel\nsource /var/www/venv/bin/activate\npython main.py' > /var/www/.bash_profile && \
+    chown www-data:www-data /var/www/.bash_profile && \
+    chmod 755 /var/www/.bash_profile
+
+
+# Switch to ddev user
+USER ddev
+
+
+# CMD at the end
+CMD ["/web-entrypoint.sh"]

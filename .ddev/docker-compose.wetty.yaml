@@ -1,0 +1,26 @@
+services:
+  wetty:
+    image: wettyoss/wetty
+    container_name: ddev-${DDEV_SITENAME}-wetty
+    ports:
+      - "3000:3000"
+    restart: always
+    depends_on:
+      - knuffel
+    networks:
+      - default
+      - ddev_default
+    volumes:
+      - ./traefik/certs/kniffel.crt:/wetty.crt:ro
+      - ./traefik/certs/kniffel.key:/wetty.key:ro
+    command: >
+      --base /wetty 
+      --ssh-host=knuffel 
+      --ssh-port=22 
+      --ssh-user=www-data 
+      --ssh-password=Hamburg1 
+      --ssh-auth=password
+      --force-ssh
+      --title="Knuffel Terminal"
+      --ssl-key /wetty.key
+      --ssl-cert /wetty.crt

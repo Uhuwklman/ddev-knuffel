@@ -1,0 +1,21 @@
+name: kniffel
+type: php
+docroot: "public"
+php_version: "8.3"
+webserver_type: nginx-fpm
+xdebug_enabled: false
+additional_hostnames: []
+router_http_port: "8443"
+router_https_port: "8444"
+bind_all_interfaces: true
+hooks:
+  post-start:
+    - exec: /var/www/html/.ddev/commands/web/post-start/ensure-sshd.sh
+    - exec: /var/www/html/.ddev/commands/web/post-start/setup_db.sh
+web_extra_exposed_ports:
+  - name: knuffel
+    container_port: 8000
+    http_port: 8000
+    https_port: 8443
+web_environment:
+  - KNUFFEL_SECRET_KEY=your_secure_random_string_here
