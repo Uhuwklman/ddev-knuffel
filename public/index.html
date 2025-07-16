@@ -14,6 +14,20 @@
         h1 {
             color: #140788;
         }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+        }
+        .links {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 2rem;
+            width: 100%;
+        }
         .card {
             background: #eff1f8;
             border-radius: 8px;
@@ -33,35 +47,95 @@
         a:hover {
             text-decoration: underline;
         }
-        .links {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            max-width: 600px;
+        .sidebar {
+            background: #f7f7fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.07);
+            max-width: 350px;
+            flex: 1;
+        }
+        .disclaimer {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+        }
+        .credits {
+            margin-top: 2rem;
+            font-size: 0.95rem;
+            color: #444;
+        }
+        .credits a {
+            color: #140788;
+            font-weight: normal;
         }
     </style>
 </head>
 <body>
     <h1>Welcome to the George System Dashboard</h1>
-    <div class="links">
-        <div class="card">
-            <a id="knuffel-link" href="#" target="_blank">🐍 Knuffel Web Interface (Flask)</a>
-            <p>Access the web-based interface for the Knuffel app.</p>
-            <p>Currently not active.</p>
+    <div class="disclaimer">
+        <strong>Disclaimer:</strong> The provided applications are <b>not intended for production use</b>.  
+        They are for demonstration purposes only.
+    </div>
+    <div class="container">
+        <div class="links">
+            <div class="card" style="min-width: 260px; max-width: 350px;">
+                <a id="wetty-link" href="#" target="_blank">🖥️ Terminal Access</a>
+                <p>Open a browser-based terminal session (wetty).</p>
+                <p>Play Knuffel here.</p>
+                <p style="font-size:0.95em; margin-top:0.5em;">
+                    <a href="https://github.com/butlerx/wetty" target="_blank">About Wetty</a>
+                </p>
+            </div>
+            <div class="card" style="min-width: 260px; max-width: 350px;">
+                <a id="monitoring-link" href="#" target="_blank">📊 Monitoring Dashboard</a>
+                <p>System monitoring and metrics provided by glances.</p>
+                <p style="font-size:0.95em; margin-top:0.5em;">
+                    <a href="https://github.com/nicolargo/glances/" target="_blank">About Glances</a>
+                </p>
+            </div>
         </div>
-
-        <div class="card">
-            <a id="wetty-link" href="#" target="_blank">🖥️ Terminal Access</a>
-            <p>Open a browser-based terminal session (wetty).</p>
-            <p>Play Knuffel here.</p>
-        </div>
-
-        <div class="card">
-            <a id="monitoring-link" href="#" target="_blank">📊 Monitoring Dashboard</a>
-            <p>System monitoring and metrics can be found here.</p>
+        <div style="display: flex; flex-direction: row; justify-content: center; align-items: flex-start; gap: 2rem; width: 100%; margin-top: 2rem;">
+            <div class="card" style="min-width: 260px; max-width: 350px; flex: 1;">
+                <a id="knuffel-link" href="#" target="_blank">🐍 Knuffel Web Interface (Flask)</a>
+                <p>Access the web-based interface for the Knuffel app.</p>
+                <p>Currently not active.</p>
+            </div>
+            <div class="sidebar" style="flex: 1; max-width: 350px;">
+                <h2>Overview & Usage</h2>
+                <p>
+                    <b>Knuffel</b> is a Python-based console and web application inspired by the classic dice game.  
+                    You can interact with the app via the web interface (when enabled) or directly in the terminal.
+                </p>
+                <ul>
+                    <li><b>Web Interface:</b> Use the Flask app for a graphical experience (if enabled).</li>
+                    <li><b>Terminal:</b> Use the browser terminal to play the console version.</li>
+                    <li><b>Monitoring:</b> Check system metrics and status.</li>
+                </ul>
+                <p>
+                    <b>Basic Usage:</b><br>
+                    - For the terminal version, log in or register, then follow the on-screen instructions.<br>
+                    - For the web version, use the navigation links and forms provided.<br>
+                    - <i>Note: Database changes in the demo may not persist.</i><br>
+                    - Commands available when logged into SSH:<br>
+                    checkupdate - runbackup - updateknuffel<br>
+                </p>
+            </div>
         </div>
     </div>
-
+    <div class="credits">
+        <strong>Credits:</strong><br>
+        DDEV Integration <a href="https://github.com/Uhuwklman/ddev-knuffel" target="_blank">Uhuwklman</a><br>
+        Python Application <a href="https://github.com/TheRandomWeirdo/knuffel" target="_blank">therandomweirdo</a>
+    </div>
+    <div class="documentation" style="margin-top: 1.5rem; font-size: 1rem;">
+        <strong>Further Documentation:</strong><br>
+        <a href="#" id="doc-link" target="_blank">View external documentation</a>
+    </div>
     <script>
 document.addEventListener('DOMContentLoaded', function() {
   // Get all links
